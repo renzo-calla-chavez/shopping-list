@@ -2,7 +2,7 @@ import { Recipe } from './recipe.model';
 import { Ingredient } from '../shared/ingredient.model';
 import { Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpRequest } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 
@@ -60,22 +60,32 @@ export class RecipeService {
   }
 
   saveData() {
-    const token = this.authService.getToken();
-    return this.http.put(
-      'https://ng-recipe-book-2dd2b.firebaseio.com/recipes.json?auth=' + token,
-      this.getRecipes()
+    // return this.http.put(
+    //   'https://ng-recipe-book-2dd2b.firebaseio.com/recipes.json',
+    //   this.getRecipes(),
+    //   {
+    //     observe: 'body',
+    //     params: new HttpParams().set('auth', token)
+    //   }
+    // );
+    const req = new HttpRequest(
+      'PUT',
+      'https://ng-recipe-book-2dd2b.firebaseio.com/recipes.json',
+      this.getRecipes(),
+      {
+        reportProgress: true
+      }
     );
+    return this.http.request(req);
   }
   fetchData() {
-    const token = this.authService.getToken();
     return this.http
-      .get('https://ng-recipe-book-2dd2b.firebaseio.com/recipes.json?auth=' + token)
+      .get<Recipe[]>('https://ng-recipe-book-2dd2b.firebaseio.com/recipes.json')
       .pipe(
-        map(response => {
-          if (response === null) {
-            response = [];
+        map((recipes: Recipe[]) => {
+          if (recipes === null) {
+            recipes = [];
           }
-          const recipes: Recipe[] = response as Recipe[];
           for (const recipe of recipes) {
             if (!recipe.ingredients) {
               console.log(recipe);
